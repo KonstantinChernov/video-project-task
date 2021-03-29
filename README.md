@@ -2,11 +2,13 @@
 
 ### local dev setup
 
+Need to have ffmpeg installed
+
 1) clone repo
 
 ```
-git clone https://github.com/KonstantinChernov/test-task-milk.git
-cd test-task-milk
+git clone https://github.com/KonstantinChernov/video-project-task.git
+cd video-project-task
 ```
 
 2) make virtual env and activate it
@@ -29,3 +31,4 @@ pip install -r requirements.txt
 ```
 
 Once these are complete you should be able to point your browser to http://localhost:8000 and see the Thumbnailer application
+The documentation on API is on http://localhost:8000/api/
