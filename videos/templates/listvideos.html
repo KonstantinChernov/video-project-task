@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div class="row">
+  <div class="col-7">
+    <video id="video-player" controls>
+      <source src='#' type='video/mp4'>
+        To view this video consider upgrading to a web browser that supports HTML5 video
+    </video>
+</div>
+  <div class="list-group col-5">
+    {% for video in videos_info %}
+      <button type="button" data-video
+              class="d-flex list-group-item list-group-item-action justify-content-between">
+            <div>
+              <p class="fw-bold">{{ video.title }}</p>
+              <div>{{ video.author }}</div>
+            </div>
+            <div class="d-flex align-items-end flex-column justify-content-between">
+              <a href="{% url 'delete-video' pk=video.id %}" type="button" class="btn-close" aria-label="Close"></a>
+              <small>{{ video.date }}</small>
+            </div>
+      </button>
+    {% endfor %}
+  </div>
+</div>
+
+
+{% endblock %}
+
+{% block script %}
+<script>
+    let videoPlayer = document.querySelector('#video-player');
+    let videos = JSON.parse('{{ videos_files|safe }}');
+    let videoButtons = document.querySelectorAll('[data-video]');
+
+    let n = 0;
+    videoPlayer.src = videos[n]['video'];
+    videoButtons[n].classList.add('active');
+
+    function videoPlay(num) {
+        videoPlayer.src = videos[num]['video'];
+        videoPlayer.play();
+        videoButtons.forEach(btn => btn.classList.remove('active'));
+        videoButtons[num].classList.add('active');
+    }
+
+    videoPlayer.addEventListener('ended', (e) => {
+        e.preventDefault();
+        if (n < videos.length - 1) n += 1;
+        else n = 0;
+        videoPlay(n);
+    })
+
+    videoButtons.forEach((btn, index) => {
+        btn.addEventListener('click', (e) => {
+            n = index;
+            videoPlay(n);
+        });
+    });
+
+</script>
+{% endblock %}
