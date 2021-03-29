@@ -15,26 +15,41 @@ def handle_uploaded_file(author: str, title: str, file: UploadedFile):
     :param file: file that have been uploaded
     :return:
     """
-    # Receiving the video
-    path_to_destination_file = f'{settings.MEDIA_ROOT}/videos/{title}'
+    # Define the directory to video storage
+    dir_with_videos = os.path.join(settings.MEDIA_ROOT, 'videos')
+    if not os.path.exists(dir_with_videos):
+        os.makedirs(dir_with_videos)
 
-    with open(path_to_destination_file, 'wb+') as destination:
+    # Receiving the video
+    path_to_destination_file = os.path.join(dir_with_videos, title)
+    with open(path_to_destination_file, "wb+") as destination:
         for chunk in file.chunks():
             destination.write(chunk)
 
     # Converting the video and adding the watermark
-    if os.path.isfile(path_to_destination_file):
-        subprocess.run(['ffmpeg', '-i', f'media/videos/{title}', '-i', 'videos/static/images/watermark.png',
-                        '-filter_complex', "[0:v][1:v]overlay=10:10", f'media/videos/wm-{title}.mp4'])
+    result_filename = f"wm-{title}.mp4"
+    path_to_watermark = os.path.join("videos", "static", "images", "watermark.png")
 
-    # Saving the info of the video to db
-    Video.objects.create(author=author,
-                         title=title,
-                         video=f'videos/wm-{title}.mp4')
+    if os.path.isfile(path_to_destination_file):
+        try:
+            subprocess.run(['ffmpeg', '-i', os.path.join("media", "videos", title),
+                            '-i', path_to_watermark,
+                            '-filter_complex', "[0:v][1:v]overlay=10:10",
+                            os.path.join("media", "videos", result_filename)])
+        except Exception as e:
+            print(e)
 
     # Delete the source file
-    if os.path.isfile(path_to_destination_file):
-        os.remove(path_to_destination_file)
+    os.remove(path_to_destination_file)
+
+    # Saving the info of the video to db
+    if os.path.isfile(os.path.join(dir_with_videos, result_filename)):
+        Video.objects.create(author=author,
+                             title=title,
+                             video=os.path.join('videos', result_filename))
+        return True
+    else:
+        return False
 
 
 def delete_video(pk: int):
@@ -44,7 +59,7 @@ def delete_video(pk: int):
     :return:
     """
     video = Video.objects.get(pk=pk)
-    path_to_file = f'{settings.MEDIA_ROOT}/{str(video.video)}'
+    path_to_file = os.path.join(settings.MEDIA_ROOT, str(video.video))
     if os.path.isfile(path_to_file):
         os.remove(path_to_file)
     video.delete()

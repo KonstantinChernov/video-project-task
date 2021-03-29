@@ -13,8 +13,10 @@ from videos.services import delete_video, handle_uploaded_file
 
 class VideoView(View):
     """ Main page view with list of videos and video player """
+
     def get(self, request):
         videos = Video.objects.all()
+
         # Serialize the video files to work with them in JS
         serializer = VideoFileSerializer(videos, many=True)
         videos_files = json.dumps(serializer.data)
@@ -24,17 +26,19 @@ class VideoView(View):
 
 class UploadVideo(View):
     """ View to page with upload videos functionality """
+
     def post(self, request):
         form = VideoForm(request.POST, request.FILES)
         if form.is_valid():
-            handle_uploaded_file(author=form.cleaned_data['author'],
-                                 title=form.cleaned_data['title'],
-                                 file=request.FILES['video'])
-            messages.success(request, "The video posted successfully")
-            return redirect(reverse_lazy('videos-list'))
-        else:
-            messages.error(request, "The video loading failed")
-            return render(request, 'uploadvideo.html', {'form': form})
+            video_saved = handle_uploaded_file(author=form.cleaned_data['author'],
+                                               title=form.cleaned_data['title'],
+                                               file=request.FILES['video'])
+            if video_saved:
+                messages.success(request, "The video posted successfully")
+                return redirect(reverse_lazy('videos-list'))
+
+        messages.error(request, "The video loading failed")
+        return render(request, 'uploadvideo.html', {'form': form})
 
     def get(self, request):
         form = VideoForm()
@@ -43,6 +47,7 @@ class UploadVideo(View):
 
 class DeleteVideo(View):
     """ View to delete the video """
+
     def get(self, request, pk):
         delete_video(pk)
         return redirect(reverse_lazy('videos-list'))
